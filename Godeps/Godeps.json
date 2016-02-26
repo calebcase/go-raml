@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/Jumpscale/go-raml",
-	"GoVersion": "go1.5.3",
+	"GoVersion": "go1.6",
 	"Packages": [
 		"./..."
 	],
@@ -29,7 +29,22 @@
 			"Rev": "01fedaa993c0a9f9aa55111501cd7c81a49e812e"
 		},
 		{
+			"ImportPath": "github.com/smartystreets/assertions/internal/oglematchers",
+			"Comment": "1.5.0-405-g01fedaa",
+			"Rev": "01fedaa993c0a9f9aa55111501cd7c81a49e812e"
+		},
+		{
 			"ImportPath": "github.com/smartystreets/goconvey/convey",
+			"Comment": "1.5.0-455-g8d46e6d",
+			"Rev": "8d46e6d51692cda11b447f0d01ce83a0ad84aeab"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/gotest",
+			"Comment": "1.5.0-455-g8d46e6d",
+			"Rev": "8d46e6d51692cda11b447f0d01ce83a0ad84aeab"
+		},
+		{
+			"ImportPath": "github.com/smartystreets/goconvey/convey/reporting",
 			"Comment": "1.5.0-455-g8d46e6d",
 			"Rev": "8d46e6d51692cda11b447f0d01ce83a0ad84aeab"
 		},
@@ -37,6 +52,14 @@
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Comment": "v1.0-12-g7e4a149",
 			"Rev": "7e4a149930b09fe4c2b134c50ce637457ba6e966"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "91ae5f88a67b14891cfd43895b01164f6c120420"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4"
 		}
 	]
 }
