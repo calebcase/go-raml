@@ -5,6 +5,56 @@ import (
 	"strings"
 )
 
+// Method are operations that are performed on a resource
+type Method struct {
+	Name string
+
+	// An alternate, human-friendly method name in the context of the resource.
+	// If the displayName property is not defined for a method,
+	// documentation tools SHOULD refer to the resource by its property key,
+	// which acts as the method name.
+	DisplayName string `yaml:"displayName"`
+
+	// A longer, human-friendly description of the method in the context of the resource.
+	// Its value is a string and MAY be formatted using markdown.
+	Description string `yaml:"description"`
+
+	// TODO : annotation
+
+	// Detailed information about any query parameters needed by this method.
+	// Mutually exclusive with queryString.
+	// The queryParameters property is a map in which the key is the query
+	// parameter's name, and the value is itself a map specifying the query
+	//  parameter's attributes
+	QueryParameters map[string]NamedParameter `yaml:"queryParameters"`
+
+	// Detailed information about any request headers needed by this method.
+	Headers map[HTTPHeader]Header `yaml:"headers"`
+
+	// The query string needed by this method.
+	// Mutually exclusive with queryParameters.
+	QueryString map[string]NamedParameter `yaml:"queryString"`
+
+	// Information about the expected responses to a request.
+	// Responses MUST be a map of one or more HTTP status codes, where each
+	// status code itself is a map that describes that status code.
+	Responses map[HTTPCode]Response `yaml:"responses"`
+
+	// A request body that the method admits.
+	Bodies Bodies `yaml:"body"`
+
+	// Explicitly specify the protocol(s) used to invoke a method,
+	// thereby overriding the protocols set elsewhere,
+	// for example in the baseUri or the root-level protocols property.
+	Protocols []string `yaml:"protocols"`
+
+	// A list of the traits to apply to this method.
+	Is []DefinitionChoice `yaml:"is"`
+
+	// The security schemes that apply to this method.
+	SecuredBy []DefinitionChoice `yaml:"securedBy"`
+}
+
 func newMethod(name string) *Method {
 	return &Method{
 		Name: name,
@@ -159,6 +209,32 @@ func (m *Method) inheritResponses(parent map[HTTPCode]Response, dicts map[string
 
 }
 
+// Response property of a method on a resource describes
+// the possible responses to invoking that method on that resource.
+// The value of responses is an object that has properties named after
+// possible HTTP status codes for that method on that resource.
+// The property values describe the corresponding responses.
+// Each value is a response declaration.
+type Response struct {
+
+	// HTTP status code of the response
+	HTTPCode HTTPCode
+	// TODO: Fill this during the post-processing phase
+
+	// A substantial, human-friendly description of a response.
+	// Its value is a string and MAY be formatted using markdown.
+	Description string
+
+	// TODO : annotation
+
+	// An API's methods may support custom header values in responses
+	// Detailed information about any response headers returned by this method
+	Headers map[HTTPHeader]Header `yaml:"headers"`
+
+	// The body of the response
+	Bodies Bodies `yaml:"body"`
+}
+
 // inherit from parent response
 func (resp *Response) inherit(parent Response, dicts map[string]interface{}) {
 	resp.Description = substituteParams(resp.Description, parent.Description, dicts)
@@ -166,25 +242,118 @@ func (resp *Response) inherit(parent Response, dicts map[string]interface{}) {
 	resp.Headers = inheritHeaders(resp.Headers, parent.Headers, dicts)
 }
 
+// Body is the request/response body
+// Some method verbs expect the resource to be sent as a request body.
+// For example, to create a resource, the request must include the details of
+// the resource to create.
+// Resources CAN have alternate representations. For example, an API might
+// support both JSON and XML representations.
+type Body struct {
+	mediaType string `yaml:"mediaType"`
+	// TODO: Fill this during the post-processing phase
+
+	// The structure of a request or response body MAY be further specified
+	// by the schema property under the appropriate media type.
+	// The schema key CANNOT be specified if a body's media type is
+	// application/x-www-form-urlencoded or multipart/form-data.
+	// All parsers of RAML MUST be able to interpret JSON Schema [JSON_SCHEMA]
+	// and XML Schema [XML_SCHEMA].
+	// Alternatively, the value of the schema field MAY be the name of a schema
+	// specified in the root-level schemas property
+	Schema string `yaml:"schema"`
+
+	// Brief description
+	Description string `yaml:"description"`
+
+	// Example attribute to generate example invocations
+	Example string `yaml:"example"`
+
+	// Web forms REQUIRE special encoding and custom declaration.
+	// If the API's media type is either application/x-www-form-urlencoded or
+	// multipart/form-data, the formParameters property MUST specify the
+	// name-value pairs that the API is expecting.
+	// The formParameters property is a map in which the key is the name of
+	// the web form parameter, and the value is itself a map the specifies
+	// the web form parameter's attributes
+	FormParameters map[string]NamedParameter `yaml:"formParameters"`
+	// TODO: This doesn't make sense in response bodies.. separate types for
+	// request and response body?
+
+	Headers map[HTTPHeader]Header `yaml:"headers"`
+}
+
+// Bodies is Container of Body types, necessary because of technical reasons.
+type Bodies struct {
+
+	// Instead of using a simple map[HTTPHeader]Body for the body
+	// property of the Response and Method, we use the Bodies struct. Why?
+	// Because some RAML APIs don't use the MIMEType part, instead relying
+	// on the mediaType property in the APIDefinition.
+	// So, you might see:
+	//
+	// responses:
+	//   200:
+	//     body:
+	//       example: "some_example" : "123"
+	//
+	// and also:
+	//
+	// responses:
+	//   200:
+	//     body:
+	//       application/json:
+	//         example: |
+	//           {
+	//             "some_example" : "123"
+	//           }
+
+	// As in the Body type.
+	Schema string `yaml:"schema"`
+
+	// As in the Body type.
+	Description string `yaml:"description"`
+
+	// As in the Body type.
+	Example string `yaml:"example"`
+
+	// As in the Body type.
+	FormParameters map[string]NamedParameter `yaml:"formParameters"`
+
+	// Resources CAN have alternate representations. For example, an API
+	// might support both JSON and XML representations. This is the map
+	// between MIME-type and the body definition related to it.
+	ForMIMEType map[string]Body `yaml:",regexp:.*"`
+
+	// TODO: For APIs without a priori knowledge of the response types for
+	// their responses, "*/*" MAY be used to indicate that responses that do
+	// not matching other defined data types MUST be accepted. Processing
+	// applications MUST match the most descriptive media type first if
+	// "*/*" is used.
+	ApplicationJSON *BodiesProperty `yaml:"application/json"`
+
+	// Request/response body type
+	Type string `yaml:"type"`
+}
+
 // inherit inherits bodies properties from a parent bodies
 // parent object could be from trait or response type
 func (b *Bodies) inherit(parent Bodies, dicts map[string]interface{}) {
-	b.DefaultSchema = substituteParams(b.DefaultSchema, parent.DefaultSchema, dicts)
-	b.DefaultDescription = substituteParams(b.DefaultDescription, parent.DefaultDescription, dicts)
-	b.DefaultExample = substituteParams(b.DefaultExample, parent.DefaultExample, dicts)
+	b.Schema = substituteParams(b.Schema, parent.Schema, dicts)
+	b.Description = substituteParams(b.Description, parent.Description, dicts)
+	b.Example = substituteParams(b.Example, parent.Example, dicts)
 
 	b.Type = substituteParams(b.Type, parent.Type, dicts)
 
 	// request body
-	if parent.ApplicationJson != nil {
-		if b.ApplicationJson == nil { // allocate if needed
-			b.ApplicationJson = &BodiesProperty{Properties: map[string]interface{}{}}
+	if parent.ApplicationJSON != nil {
+		if b.ApplicationJSON == nil { // allocate if needed
+			b.ApplicationJSON = &BodiesProperty{Properties: map[string]interface{}{}}
 		}
 
-		b.ApplicationJson.Type = substituteParams(b.ApplicationJson.Type, parent.ApplicationJson.Type, dicts)
+		b.ApplicationJSON.Type = substituteParams(b.ApplicationJSON.Type, parent.ApplicationJSON.Type, dicts)
 
-		for k, p := range parent.ApplicationJson.Properties {
-			if _, ok := b.ApplicationJson.Properties[k]; !ok {
+		for k, p := range parent.ApplicationJSON.Properties {
+			if _, ok := b.ApplicationJSON.Properties[k]; !ok {
 
 				// handle optional properties as described in
 				// https://github.com/raml-org/raml-spec/blob/raml-10/versions/raml-10/raml-10.md#optional-properties
@@ -194,8 +363,10 @@ func (b *Bodies) inherit(parent Bodies, dicts map[string]interface{}) {
 				case strings.HasSuffix(k, "?"): // if only ended with `?`, we can ignore it
 					continue
 				}
-				b.ApplicationJson.Properties[k] = p
+				b.ApplicationJSON.Properties[k] = p
 			}
 		}
 	}
+
+	// TODO : formimeytype
 }

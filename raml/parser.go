@@ -53,6 +53,8 @@ func ParseFile(filePath string) (*APIDefinition, error) {
 	return apiDef, err
 }
 
+// ParseReadFile parse an .raml file.
+// It returns API definition and the concatenated .raml file.
 func ParseReadFile(filePath string) ([]byte, *APIDefinition, error) {
 
 	// Get the working directory
@@ -113,7 +115,7 @@ func ParseReadFile(filePath string) ([]byte, *APIDefinition, error) {
 	if err != nil {
 
 		// Create a RAML error value
-		ramlError := new(RamlError)
+		ramlError := new(Error)
 
 		// Copy the YAML errors into it..
 		if yamlErrors, ok := err.(*yaml.TypeError); ok {

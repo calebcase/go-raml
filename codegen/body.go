@@ -74,7 +74,7 @@ func buildBodyFromMethod(structName, methodName, dir, packageName, lang string, 
 		if !hasJSONBody(&method.Bodies) {
 			return nil
 		}
-		pc := newPythonClass(structName+methodName+reqBodySuffix, "", method.Bodies.ApplicationJson.Properties)
+		pc := newPythonClass(structName+methodName+reqBodySuffix, "", method.Bodies.ApplicationJSON.Properties)
 		return pc.generate(dir)
 	}
 
@@ -91,7 +91,7 @@ func buildBodyFromMethod(structName, methodName, dir, packageName, lang string, 
 
 // check if this raml.Bodies has JSON body that need to be generated
 func hasJSONBody(body *raml.Bodies) bool {
-	return body.ApplicationJson != nil && len(body.ApplicationJson.Properties) > 0
+	return body.ApplicationJSON != nil && len(body.ApplicationJSON.Properties) > 0
 }
 
 // generate a struct from an RAML request/response body

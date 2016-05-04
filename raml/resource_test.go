@@ -23,7 +23,7 @@ func TestResourceTypeInheritance(t *testing.T) {
 
 			So(r.Post, ShouldNotBeNil)
 			So(r.Post.Description, ShouldEqual, "Create a new User")
-			So(r.Post.Bodies.ApplicationJson.Type, ShouldEqual, "User")
+			So(r.Post.Bodies.ApplicationJSON.Type, ShouldEqual, "User")
 			So(r.Post.Responses[200].Bodies.Type, ShouldEqual, "User")
 		})
 
@@ -43,7 +43,7 @@ func TestResourceTypeInheritance(t *testing.T) {
 
 			So(r.Post, ShouldNotBeNil)
 
-			props := r.Post.Bodies.ApplicationJson.Properties
+			props := r.Post.Bodies.ApplicationJSON.Properties
 			So(ToProperty("name", props["name"]).Type, ShouldEqual, "string")
 			So(ToProperty("age", props["age"]).Type, ShouldEqual, "int")
 			So(r.Post.Headers["X-Chargeback"].Required, ShouldBeTrue)
@@ -83,7 +83,7 @@ func TestResourceTypeInheritance(t *testing.T) {
 			r := apiDef.Resources["/servers"]
 			So(r, ShouldNotBeNil)
 
-			props := r.Post.Bodies.ApplicationJson.Properties
+			props := r.Post.Bodies.ApplicationJSON.Properties
 
 			So(props, ShouldContainKey, "name")
 			So(props, ShouldContainKey, "address?")

@@ -149,7 +149,7 @@ func newStructDefFromBody(body *raml.Bodies, structNamePrefix, packageName strin
 		structName = structNamePrefix + reqBodySuffix
 	}
 
-	return newStructDef(structName, packageName, "", body.ApplicationJson.Properties)
+	return newStructDef(structName, packageName, "", body.ApplicationJSON.Properties)
 }
 
 // generate Go struct

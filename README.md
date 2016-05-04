@@ -124,7 +124,6 @@ struct name = types name.
     file        | string
     sometype[]  | []sometype
     sometype[][]| [][]sometype
-    sometype{}  | map[string]sometype
     Union       | interface{}
 
 ## Bodies

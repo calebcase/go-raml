@@ -36,20 +36,20 @@ import (
 	yaml "github.com/buddhamagnet/yaml"
 )
 
-// A RamlError is returned by the ParseFile function when RAML or YAML problems
+// An Error is returned by the ParseFile function when RAML or YAML problems
 // are encountered when parsing the RAML document.
-type RamlError struct {
+type Error struct {
 	Errors []string
 }
 
-func (e *RamlError) Error() string {
+func (e *Error) Error() string {
 	return fmt.Sprintf("Error parsing RAML:\n  %s\n",
 		strings.Join(e.Errors, "\n  "))
 }
 
 // Populate the RAML error value with converted YAML error strings (with
 // additional context)
-func populateRAMLError(ramlError *RamlError,
+func populateRAMLError(ramlError *Error,
 	yamlErrors *yaml.TypeError) {
 
 	// Go over the errors
@@ -122,7 +122,7 @@ func convertYAMLError(yamlError string) string {
 	return fmt.Sprintf("YAML error, %s", yamlError)
 }
 
-var yamlTypeToName map[string]string = map[string]string{
+var yamlTypeToName = map[string]string{
 	"!!seq":       "sequence",
 	"!!map":       "mapping",
 	"!!int":       "integer",
@@ -135,7 +135,7 @@ var yamlTypeToName map[string]string = map[string]string{
 	"!!merge":     "merge",
 }
 
-var ramlTypeNames map[string]string = map[string]string{
+var ramlTypeNames = map[string]string{
 	"string": "string value",
 	"int":    "numeric value",
 	"raml.NamedParameter":       "named parameter",
@@ -157,7 +157,7 @@ var ramlTypeNames map[string]string = map[string]string{
 	"raml.APIDefinition":        "API definition",
 }
 
-var ramlTypes map[string]string = map[string]string{
+var ramlTypes = map[string]string{
 	"string": "string",
 	"int":    "integer",
 	"raml.NamedParameter":       "mapping",

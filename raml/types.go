@@ -37,146 +37,31 @@ import "strings"
 // TODO: We don't support !include of non-text files. RAML supports including
 //       of many file types.
 
-// "Any" type, for our convenience
+// Any type, for our convenience
 type Any interface{}
 
-// For extra clarity
-type HTTPCode int      // e.g. 200
+// HTTPCode defines an HTTP status code, for extra clarity
+type HTTPCode int // e.g. 200
+
+// HTTPHeader defines an HTTP header
 type HTTPHeader string // e.g. Content-Length
 
-// Headers used in Methods and other types
+// Header used in Methods and other types
 type Header NamedParameter
 
-// All documentation of the API is of this format.
+// Documentation is the additional overall documentation for the API.
 type Documentation struct {
 	Title   string `yaml:"title"`
 	Content string `yaml:"content"`
 }
 
-// Some method verbs expect the resource to be sent as a request body.
-// For example, to create a resource, the request must include the details of
-// the resource to create.
-// Resources CAN have alternate representations. For example, an API might
-// support both JSON and XML representations.
-type Body struct {
-	mediaType string `yaml:"mediaType"`
-	// TODO: Fill this during the post-processing phase
-
-	// The structure of a request or response body MAY be further specified
-	// by the schema property under the appropriate media type.
-	// The schema key CANNOT be specified if a body's media type is
-	// application/x-www-form-urlencoded or multipart/form-data.
-	// All parsers of RAML MUST be able to interpret JSON Schema [JSON_SCHEMA]
-	// and XML Schema [XML_SCHEMA].
-	// Alternatively, the value of the schema field MAY be the name of a schema
-	// specified in the root-level schemas property
-	Schema string `yaml:"schema"`
-
-	// Brief description
-	Description string `yaml:"description"`
-
-	// Example attribute to generate example invocations
-	Example string `yaml:"example"`
-
-	// Web forms REQUIRE special encoding and custom declaration.
-	// If the API's media type is either application/x-www-form-urlencoded or
-	// multipart/form-data, the formParameters property MUST specify the
-	// name-value pairs that the API is expecting.
-	// The formParameters property is a map in which the key is the name of
-	// the web form parameter, and the value is itself a map the specifies
-	// the web form parameter's attributes
-	FormParameters map[string]NamedParameter `yaml:"formParameters"`
-	// TODO: This doesn't make sense in response bodies.. separate types for
-	// request and response body?
-
-	Headers map[HTTPHeader]Header `yaml:"headers"`
-}
-
-// Container of Body types, necessary because of technical reasons.
-type Bodies struct {
-
-	// Instead of using a simple map[HTTPHeader]Body for the body
-	// property of the Response and Method, we use the Bodies struct. Why?
-	// Because some RAML APIs don't use the MIMEType part, instead relying
-	// on the mediaType property in the APIDefinition.
-	// So, you might see:
-	//
-	// responses:
-	//   200:
-	//     body:
-	//       example: "some_example" : "123"
-	//
-	// and also:
-	//
-	// responses:
-	//   200:
-	//     body:
-	//       application/json:
-	//         example: |
-	//           {
-	//             "some_example" : "123"
-	//           }
-
-	// As in the Body type.
-	DefaultSchema string `yaml:"schema"`
-
-	// As in the Body type.
-	DefaultDescription string `yaml:"description"`
-
-	// As in the Body type.
-	DefaultExample string `yaml:"example"`
-
-	// As in the Body type.
-	DefaultFormParameters map[string]NamedParameter `yaml:"formParameters"`
-
-	// TODO: Is this ever used? I think I put it here by mistake.
-	//Headers               map[HTTPHeader]Header     `yaml:"headers"`
-
-	// Resources CAN have alternate representations. For example, an API
-	// might support both JSON and XML representations. This is the map
-	// between MIME-type and the body definition related to it.
-	ForMIMEType map[string]Body `yaml:",regexp:.*"`
-
-	// TODO: For APIs without a priori knowledge of the response types for
-	// their responses, "*/*" MAY be used to indicate that responses that do
-	// not matching other defined data types MUST be accepted. Processing
-	// applications MUST match the most descriptive media type first if
-	// "*/*" is used.
-	ApplicationJson *BodiesProperty `yaml:"application/json"`
-
-	Type string `yaml:"type"`
-}
-
-// Resource methods MAY have one or more responses.
-type Response struct {
-
-	// HTTP status code of the response
-	HTTPCode HTTPCode
-	// TODO: Fill this during the post-processing phase
-
-	// Clarifies why the response was emitted. Response descriptions are
-	// particularly useful for describing error conditions.
-	Description string
-
-	// An API's methods may support custom header values in responses
-	Headers map[HTTPHeader]Header `yaml:"headers"`
-
-	// TODO: API's may include the the placeholder token {?} in a header name
-	// to indicate that any number of headers that conform to the specified
-	// format can be sent in responses. This is particularly useful for
-	// APIs that allow HTTP headers that conform to some naming convention
-	// to send arbitrary, custom data.
-
-	// Each response MAY contain a body property. Responses that can return
-	// more than one response code MAY therefore have multiple bodies defined.
-	Bodies Bodies `yaml:"body"`
-}
-
+// DefinitionParameters defines a map of parameter name at it's value.
 // A ResourceType/Trait/SecurityScheme choice contains the name of a
 // ResourceType/Trait/SecurityScheme as well as the parameters used to create
 // an instance of it.
-// Parameters MUST be of type string.
 type DefinitionParameters map[string]interface{}
+
+// DefinitionChoice defines a definition with it's parameters
 type DefinitionChoice struct {
 	Name string
 
@@ -188,7 +73,7 @@ type DefinitionChoice struct {
 	Parameters DefinitionParameters
 }
 
-// Unmarshal a node which MIGHT be a simple string or a
+// UnmarshalYAML unmarshals a node which MIGHT be a simple string or a
 // map[string]DefinitionParameters
 func (dc *DefinitionChoice) UnmarshalYAML(unmarshaler func(interface{}) error) error {
 
@@ -212,199 +97,6 @@ func (dc *DefinitionChoice) UnmarshalYAML(unmarshaler func(interface{}) error) e
 	// Still didn't work? Panic
 
 	return err
-}
-
-// A trait-like structure to a security scheme mechanism so as to extend
-// the mechanism, such as specifying response codes, HTTP headers or custom
-// documentation.
-type SecuritySchemeMethod struct {
-	//Bodies          Bodies                    `yaml:"body"`
-	Headers         map[HTTPHeader]Header     `yaml:"headers"`
-	QueryParameters map[string]NamedParameter `yaml:"queryParameters"`
-	Responses       map[HTTPCode]Response     `yaml:"responses"`
-}
-
-// Most REST APIs have one or more mechanisms to secure data access, identify
-// requests, and determine access level and data visibility.
-type SecurityScheme struct {
-	Name string
-	// TODO: Fill this during the post-processing phase
-
-	// Briefly describes the security scheme
-	Description string `yaml:"description"`
-
-	// The type attribute MAY be used to convey information about
-	// authentication flows and mechanisms to processing applications
-	// such as Documentation Generators and Client generators.
-	Type string `yaml:"type"`
-	// TODO: Verify that it is of the values accepted: "OAuth 1.0",
-	// "OAuth 2.0", "Basic Authentication", "Digest Authentication",
-	// "x-{other}"
-
-	// The describedBy attribute MAY be used to apply a trait-like structure
-	// to a security scheme mechanism so as to extend the mechanism, such as
-	// specifying response codes, HTTP headers or custom documentation.
-	// This extension allows API designers to describe security schemes.
-	// As a best practice, even for standard security schemes, API designers
-	// SHOULD describe the security schemes' required artifacts, such as
-	// headers, URI parameters, and so on.
-	// Including the security schemes' description completes an API's documentation.
-	DescribedBy SecuritySchemeMethod `yaml:"describedBy"`
-
-	// The settings attribute MAY be used to provide security schema-specific
-	// information. Depending on the value of the type parameter, its attributes
-	// can vary.
-	Settings map[string]Any `yaml:"settings"`
-	// TODO: Verify OAuth 1.0, 2.0 settings
-	// TODO: Add to documentaiotn
-
-	// If the scheme's type is x-other, API designers can use the properties
-	// in this mapping to provide extra information to clients that understand
-	// the x-other type.
-	Other map[string]string
-}
-
-// Methods are operations that are performed on a resource
-type Method struct {
-	Name string
-
-	// Briefly describes what the method does to the resource
-	Description string `yaml:"description"`
-
-	DisplayName string `yaml:"displayName"`
-
-	// Applying a securityScheme definition to a method overrides whichever
-	// securityScheme has been defined at the root level. To indicate that
-	// the method is protected using a specific security scheme, the method
-	// MUST be defined by using the securedBy attribute
-	// Custom parameters can be provided to the security scheme.
-	SecuredBy []DefinitionChoice `yaml:"securedBy"`
-	// TODO: To indicate that the method may be called without applying any
-	// securityScheme, the method may be annotated with the null securityScheme.
-
-	// Object whose property names are the query parameter names
-	// and whose values describe the values.
-	Headers map[HTTPHeader]Header `yaml:"headers"`
-	// TODO: Examples for headers are REQUIRED.
-	// TODO: If the header name contains the placeholder token {*}, processing
-	// applications MUST allow requests to send any number of headers that
-	// conform to the format specified, with {*} replaced by 0 or more valid
-	// header characters, and offer a way for implementations to add an
-	// arbitrary number of such headers. This is particularly useful for APIs
-	// that allow HTTP headers that conform to custom naming conventions to
-	// send arbitrary, custom data.
-
-	// A RESTful API method can be reached HTTP, HTTPS, or both.
-	// A method can override an API's protocols value for that single method
-	// by setting a different value for the fields.
-	Protocols []string `yaml:"protocols"`
-
-	// The queryParameters property is a map in which the key is the query
-	// parameter's name, and the value is itself a map specifying the query
-	//  parameter's attributes
-	QueryParameters map[string]NamedParameter `yaml:"queryParameters"`
-
-	// Some method verbs expect the resource to be sent as a request body.
-	// A method's body is defined in the body property as a hashmap, in which
-	// the key MUST be a valid media type.
-	Bodies Bodies `yaml:"body"`
-	// TODO: Check - how does the mediaType play play here? What it do?
-
-	// Resource methods MAY have one or more responses. Responses MAY be
-	// described using the description property, and MAY include example
-	// attributes or schema properties.
-	// Responses MUST be a map of one or more HTTP status codes, where each
-	// status code itself is a map that describes that status code.
-	Responses map[HTTPCode]Response `yaml:"responses"`
-
-	// Methods may specify one or more traits from which they inherit using the
-	// is property
-	Is []DefinitionChoice `yaml:"is"`
-	// TODO: Add support for inline traits?
-}
-
-// A resource is the conceptual mapping to an entity or set of entities.
-type Resource struct {
-
-	// Resources are identified by their relative URI, which MUST begin with
-	// a slash (/).
-	URI string
-
-	// A resource defined as a child property of another resource is called a
-	// nested resource, and its property's key is its URI relative to its
-	// parent resource's URI. If this is not nil, then this resource is a
-	// child resource.
-	Parent *Resource
-
-	// A friendly name to the resource
-	DisplayName string `yaml:"displayName"`
-
-	// Briefly describes the resource
-	Description string `yaml:"description"`
-
-	// A securityScheme may also be applied to a resource by using the
-	// securedBy key, which is equivalent to applying the securityScheme to
-	// all methods of this Resource.
-	// Custom parameters can be provided to the security scheme.
-	SecuredBy []DefinitionChoice `yaml:"securedBy"`
-	// TODO: To indicate that the method may be called without applying any
-	// securityScheme, the method may be annotated with the null securityScheme.
-
-	// Template URIs containing URI parameters can be used to define a
-	// resource's relative URI when it contains variable elements.
-	// The values matched by URI parameters cannot contain slash (/) characters
-	URIParameters map[string]NamedParameter `yaml:"uriParameters"`
-
-	// TODO: If a URI parameter in a resource's relative URI is not explicitly
-	// described in a uriParameters property for that resource, it MUST still
-	// be treated as a URI parameter with defaults as specified in the Named
-	// Parameters section of this specification. Its type is "string", it is
-	// required, and its displayName is its name (i.e. without the surrounding
-	// curly brackets [{] and [}]). In the example below, the top-level
-	// resource has two URI parameters, "folderId" and "fileId
-
-	// TOOD: A special uriParameter, mediaTypeExtension, is a reserved
-	// parameter. It may be specified explicitly in a uriParameters property
-	// or not specified explicitly, but its meaning is reserved: it is used
-	// by a client to specify that the body of the request or response be of
-	// the associated media type. By convention, a value of .json is
-	// equivalent to an Accept header of application/json and .xml is
-	// equivalent to an Accept header of text/xml.
-
-	// Resources may specify the resource type from which they inherit using
-	// the type property. The resource type may be defined inline as the value
-	// of the type property (directly or via an !include), or the value of
-	// the type property may be the name of a resource type defined within
-	// the root-level resourceTypes property.
-	// NOTE: inline not currently supported.
-	Type *DefinitionChoice `yaml:"type"`
-
-	// TODO: Add support for inline ResourceTypes
-
-	// A resource may use the is property to apply the list of traits to all
-	// its methods.
-	Is []DefinitionChoice `yaml:"is"`
-	// TODO: Add support for inline traits?
-
-	// In a RESTful API, methods are operations that are performed on a
-	// resource. A method MUST be one of the HTTP methods defined in the
-	// HTTP version 1.1 specification [RFC2616] and its extension,
-	// RFC5789 [RFC5789].
-	Get     *Method `yaml:"get"`
-	Patch   *Method `yaml:"patch"`
-	Put     *Method `yaml:"put"`
-	Head    *Method `yaml:"head"`
-	Post    *Method `yaml:"post"`
-	Delete  *Method `yaml:"delete"`
-	Options *Method `yaml:"options"`
-
-	// A resource defined as a child property of another resource is called a
-	// nested resource, and its property's key is its URI relative to its
-	// parent resource's URI.
-	Nested map[string]*Resource `yaml:",regexp:/.*"`
-
-	// all methods of this resource
-	Methods []*Method `yaml:"-"`
 }
 
 // Property defines a Type property

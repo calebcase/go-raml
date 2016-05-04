@@ -7,6 +7,64 @@ import (
 	"strings"
 )
 
+// A Resource is the conceptual mapping to an entity or set of entities.
+type Resource struct {
+
+	// Resources are identified by their relative URI, which MUST begin with
+	// a slash (/).
+	URI string
+
+	// An alternate, human-friendly name for the resource.
+	// If the displayName property is not defined for a resource,
+	// documentation tools SHOULD refer to the resource by its property key
+	// which acts as the resource name. For example, tools should refer to the relative URI /jobs.
+	DisplayName string `yaml:"displayName"`
+
+	// A substantial, human-friendly description of a resource.
+	// Its value is a string and MAY be formatted using markdown.
+	Description string `yaml:"description"`
+
+	// TODO : annotationName
+
+	// In a RESTful API, methods are operations that are performed on a
+	// resource. A method MUST be one of the HTTP methods defined in the
+	// HTTP version 1.1 specification [RFC2616] and its extension,
+	// RFC5789 [RFC5789].
+	Get     *Method `yaml:"get"`
+	Patch   *Method `yaml:"patch"`
+	Put     *Method `yaml:"put"`
+	Head    *Method `yaml:"head"`
+	Post    *Method `yaml:"post"`
+	Delete  *Method `yaml:"delete"`
+	Options *Method `yaml:"options"`
+
+	// A list of traits to apply to all methods declared (implicitly or explicitly) for this resource.
+	// Individual methods can override this declaration.
+	Is []DefinitionChoice `yaml:"is"`
+
+	// The resource type that this resource inherits.
+	Type *DefinitionChoice `yaml:"type"`
+
+	// The security schemes that apply to all methods declared (implicitly or explicitly) for this resource.
+	SecuredBy []DefinitionChoice `yaml:"securedBy"`
+
+	// Detailed information about any URI parameters of this resource.
+	URIParameters map[string]NamedParameter `yaml:"uriParameters"`
+
+	// A nested resource, which is identified as any property
+	// whose name begins with a slash ("/"), and is therefore treated as a relative URI.
+	Nested map[string]*Resource `yaml:",regexp:/.*"`
+
+	// A resource defined as a child property of another resource is called a
+	// nested resource, and its property's key is its URI relative to its
+	// parent resource's URI. If this is not nil, then this resource is a
+	// child resource.
+	Parent *Resource
+
+	// all methods of this resource
+	Methods []*Method `yaml:"-"`
+}
+
 // postProcess doing post processing of a resource after being constructed by the parser.
 // some of the workds:
 // - assign all properties that can't be obtained from RAML document
@@ -236,7 +294,7 @@ func getParamValue(param string, dicts map[string]interface{}) string {
 		var ok bool
 		val, ok = doInflect(val, inflector)
 		if !ok {
-			panic("invalid inflector " + inflector)
+			log.Fatalf("invalid inflector " + inflector)
 		}
 	}
 	return val
