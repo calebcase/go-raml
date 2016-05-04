@@ -25,7 +25,7 @@
 // the authors and should not be interpreted as representing official policies,
 // either expressed or implied, of DoAT.
 
-// This package contains the parser, validator and types that implement the
+// Package raml contains the parser, validator and types that implement the
 // RAML specification, as documented here:
 // http://raml.org/spec.html
 package raml
@@ -407,137 +407,6 @@ type Resource struct {
 	Methods []*Method `yaml:"-"`
 }
 
-// TODO: Resource.GetBaseURIParameter --> includeds APIDefinition BURIParams..
-// TODO: Resource.GetAbsoluteURI
-
-// The API Definition describes the basic information of an API, such as its
-// title and base URI, and describes how to define common schema references.
-type APIDefinition struct {
-
-	// RAML 0.8
-	RAMLVersion string `yaml:"raml_version"`
-
-	// The title property is a short plain text description of the RESTful API.
-	// The title property's value SHOULD be suitable for use as a title for the
-	// contained user documentation
-	Title string `yaml:"title"`
-
-	// If RAML API definition is targeted to a specific API version, it should
-	// be noted here
-	Version string `yaml:"version"`
-
-	// A RESTful API's resources are defined relative to the API's base URI.
-	// If the baseUri value is a Level 1 Template URI, the following reserved
-	// base URI parameters are available for replacement:
-	//
-	// version - The content of the version field.
-	BaseUri string `yaml:"baseUri"`
-	// TODO: If a URI template variable in the base URI is not explicitly
-	// described in a baseUriParameters property, and is not specified in a
-	// resource-level baseUriParameters property, it MUST still be treated as
-	// a base URI parameter with defaults as specified in the Named Parameters
-	//  section of this specification. Its type is "string", it is required,
-	// and its displayName is its name (i.e. without the surrounding curly
-	// brackets [{] and [}]).
-
-	// A resource or a method can override a base URI template's values.
-	// This is useful to restrict or change the default or parameter selection
-	// in the base URI. The baseUriParameters property MAY be used to override
-	// any or all parameters defined at the root level baseUriParameters
-	// property, as well as base URI parameters not specified at the root level.
-	// In a resource structure of resources and nested resources with their
-	// methods, the most specific baseUriParameter fully overrides any
-	// baseUriParameter definition made before
-	BaseUriParameters map[string]NamedParameter `yaml:"baseUriParameters"`
-	// TODO: Generate these also from the baseUri
-
-	// Level 1 URI custom parameters, which are useful in a variety of scenario.
-	// URI parameters can be further defined by using the uriParameters
-	// property. The use of uriParameters is OPTIONAL. The uriParameters
-	// property MUST be a map in which each key MUST be the name of the URI
-	// parameter as defined in the baseUri property. The uriParameters CANNOT
-	// contain a key named version because it is a reserved URI parameter name.
-	UriParameters map[string]NamedParameter `yaml:"uriParameters"`
-
-	// A RESTful API can be reached HTTP, HTTPS, or both
-	Protocols []string `yaml:"protocols"`
-
-	// The media types returned by API responses, and expected from API
-	// requests that accept a body, MAY be defaulted by specifying the
-	// mediaType property.
-	// The property's value MAY be a single string with a valid media type:
-	//
-	// One of the following YAML media types:
-	// * text/yaml
-	// * text/x-yaml
-	// * application/yaml
-	// * application/x-yaml*
-	//
-	// Any type from the list of IANA MIME Media Types,
-	// http://www.iana.org/assignments/media-types
-	// A custom type that conforms to the regular expression:
-	// * "application\/[A-Za-z.-0-1]*+?(json|xml)"
-	MediaType string `yaml:"mediaType"`
-
-	// The schemas property specifies collections of schemas that could be
-	// used anywhere in the API definition.
-	// The value of the schemas property is an array of maps; in each map,
-	// the keys are the schema name, and the values are schema definitions:
-	// []map[SchemaName]SchemaString
-	Schemas []map[string]string
-	// TODO: Flatten the arrays of maps here.
-
-	// The securitySchemes property MUST be used to specify an API's security
-	// mechanisms, including the required settings and the authentication
-	// methods that the API supports.
-	// []map[SchemeName]SecurityScheme
-	SecuritySchemes []map[string]SecurityScheme `yaml:"securitySchemes"`
-	// TODO: Flatten the arrays of maps here.
-
-	// To apply a securityScheme definition to every method in an API, the
-	// API MAY be defined using the securedBy attribute. This specifies that
-	// all methods in the API are protected using that security scheme.
-	// Custom parameters can be provided to the security scheme.
-	SecuredBy []DefinitionChoice `yaml:"securedBy"`
-
-	// The API definition can include a variety of documents that serve as a
-	// user guides and reference documentation for the API. Such documents can
-	// clarify how the API works or provide business context.
-	// All the sections are in the order in which the documentation is declared.
-	Documentation []Documentation `yaml:"documentation"`
-
-	// To apply a trait definition to a method, so that the method inherits the
-	// trait's characteristics, the method MUST be defined by using the is
-	// attribute. The value of the is attribute MUST be an array of any number
-	// of elements, each of which MUST be a) one or more trait keys (names)
-	// included in the traits declaration, or b) one or more trait definition
-	// maps.
-	Traits []map[string]Trait `yaml:"traits"`
-
-	// The resourceTypes and traits properties are declared at the API
-	// definition's root level with the resourceTypes and traits property keys,
-	// respectively. The value of each of these properties is an array of maps;
-	// in each map, the keys are resourceType or trait names, and the values
-	// are resourceType or trait definitions, respectively.
-	ResourceTypes []map[string]ResourceType `yaml:"resourceTypes"`
-
-	// Resources are identified by their relative URI, which MUST begin with a
-	// slash (/). A resource defined as a root-level property is called a
-	// top-level resource. Its property's key is the resource's URI relative
-	// to the baseUri. A resource defined as a child property of another
-	// resource is called a nested resource, and its property's key is its
-	// URI relative to its parent resource's URI.
-	Resources map[string]Resource `yaml:",regexp:/.*"`
-
-	Types map[string]Type `yaml:"types"`
-}
-
-// This function receives a path, splits it and traverses the resource
-// tree to find the appropriate resource
-func (r *APIDefinition) GetResource(path string) *Resource {
-	return nil
-}
-
 // Property defines a Type property
 type Property struct {
 	Name     string
@@ -644,7 +513,11 @@ func ToProperty(name string, p interface{}) Property {
 
 }
 
+// Type defines an RAML data type
 type Type struct {
+	// A default value for a type
+	Default interface{} `yaml:"default"`
+
 	// Alias for the equivalent "type" property,
 	// for compatibility with RAML 0.8.
 	// Deprecated - API definitions should use the "type" property,
@@ -652,72 +525,119 @@ type Type struct {
 	// The "type" property allows for XML and JSON schemas.
 	Schema interface{} `yaml:"schema"`
 
+	// A base type which the current type extends,
+	// or more generally a type expression.
+	// A base type which the current type extends or just wraps.
+	// The value of a type node MUST be either :
+	//    a) the name of a user-defined type or
+	//    b) the name of a built-in RAML data type (object, array, or one of the scalar types) or
+	//    c) an inline type declaration.
+	Type interface{} `yaml:"type"`
+
 	// An example of an instance of this type.
 	// This can be used, e.g., by documentation generators to generate sample values for an object of this type.
 	// Cannot be present if the examples property is present.
+	// An example of an instance of this type that can be used,
+	// for example, by documentation generators to generate sample values for an object of this type.
+	// The "example" property MUST not be available when the "examples" property is already defined.
 	Example interface{} `yaml:"example"`
 
 	// An object containing named examples of instances of this type.
+	// This can be used, for example, by documentation generators
+	// to generate sample values for an object of this type.
+	// The "examples" property MUST not be available
+	// when the "example" property is already defined.
 	Examples map[string]interface{} `yaml:"examples"`
-
-	// A base type which the current type extends,
-	// or more generally a type expression.
-	Type interface{} `yaml:"type"`
 
 	// An alternate, human-friendly name for the type
 	DisplayName string `yaml:"displayName"`
 
-	// A longer, human-friendly description of the type.
+	// A substantial, human-friendly description of the type.
+	// Its value is a string and MAY be formatted using markdown.
 	Description string `yaml:"description"`
+
+	// TODO : annotation names
+
+	// TODO : facets
 
 	// The properties that instances of this type may or must have.
 	// we use `interface{}` as property type to support syntactic sugar & shortcut
 	Properties map[string]interface{} `yaml:"properties"`
 
-	// JSON schema style syntax for declaring maps
+	// -------- Below facets are available for object type --------------//
+
+	// The minimum number of properties allowed for instances of this type.
+	MinProperties int `yaml:"minProperties"`
+
+	// The maximum number of properties allowed for instances of this type.
+	MaxProperties int `yaml:"maxProperties"`
+
+	// A Boolean that indicates if an object instance has additional properties.
+	// TODO: Default : true
 	AdditionalProperties string `yaml:"additionalProperties"`
 
-	// Enum type
-	Enum interface{} `yaml:"enum"`
-
-	// Type property name to be used as a discriminator or boolean
+	// Determines the concrete type of an individual object at runtime when,
+	// for example, payloads contain ambiguous types due to unions or inheritance.
+	// The value must match the name of one of the declared properties of a type.
+	// Unsupported practices are inline type declarations and using discriminator with non-scalar properties.
 	Discriminator string `yaml:"discriminator"`
 
-	// Validators
-	MinItems    int  `yaml:"minItems"`
-	MaxItems    int  `yaml:"maxItems"`
+	// Identifies the declaring type.
+	// Requires including a discriminator property in the type declaration.
+	// A valid value is an actual value that might identify the type
+	// of an individual object and is unique in the hierarchy of the type.
+	// Inline type declarations are not supported.
+	DiscriminatorValue string `yaml:"discriminatorValue"`
+
+	// ---- facets for Array type --- //
+
+	// Indicates the type all items in the array are inherited from.
+	// Can be a reference to an existing type or an inline type declaration.
+	Items interface{} `yaml:"items"`
+
+	// Minimum amount of items in array. Value MUST be equal to or greater than 0.
+	MinItems int `yaml:"minItems" validate:"min=0"`
+
+	// Maximum amount of items in array. Value MUST be equal to or greater than 0.
+	MaxItems int `yaml:"maxItems" validate:"min=0"`
+
+	// Boolean value that indicates if items in the array MUST be unique.
 	UniqueItems bool `yaml:"uniqueItems"`
-}
 
-// IsMap checks if a type is a Map type as defined in http://docs.raml.org/specs/1.0/#raml-10-spec-types
-// map types could be written in these forms:
-// - a `[]` property
-// - a regex within `[]` property. example : [a-zA-Z]
-// - additionalProperties fied in Type
-// - patternProperties filed in Type TODO
-// Type's type must be `object`
-func (t Type) IsMap() bool {
-	// check if this map type written using `[]`
-	squareBracketPropCheck := func() bool {
-		if len(t.Properties) != 1 {
-			return false
-		}
-		for k := range t.Properties {
-			if strings.HasPrefix(k, "[") && strings.HasSuffix(k, "]") {
-				return true
-			}
-		}
-		return false
-	}
+	// ---------- facets for scalar type --------------------------//
+	// Enumeration of possible values for this built-in scalar type.
+	// The value is an array containing representations of possible values,
+	// or a single value if there is only one possible value.
+	Enum interface{} `yaml:"enum"`
 
-	if squareBracketPropCheck() {
-		return true
-	}
+	// ---------- facets for string type ------------------------//
+	// Regular expression that this string should match.
+	Pattern string `yaml:"pattern"`
 
-	if t.AdditionalProperties != "" {
-		return true
-	}
-	return false
+	// Minimum length of the string. Value MUST be equal to or greater than 0.
+	MinLength int `yaml:"minLength" validate:"min=0"`
+
+	// Maximum length of the string. Value MUST be equal to or greater than 0.
+	MaxLength int `yaml:"maxLength" validate:"max=0"`
+
+	// ----------- facets for Number -------------------------- //
+	// The minimum value of the parameter. Applicable only to parameters of type number or integer.
+	Minimum int `yaml:"minimum"`
+
+	// The maximum value of the parameter. Applicable only to parameters of type number or integer.
+	Maximum int `yaml:"maximum"`
+
+	// The format of the value. The value MUST be one of the following:
+	// int32, int64, int, long, float, double, int16, int8
+	Format string `yaml:"format"`
+
+	// A numeric instance is valid against "multipleOf"
+	// if the result of dividing the instance by this keyword's value is an integer.
+	MultipleOf int `yaml:"multipleOf"`
+
+	// ---------- facets for file --------------------------------//
+	// A list of valid content-type strings for the file. The file type */* MUST be a valid value.
+	FileTypes string `yaml:"fileTypes"`
 }
 
 // IsArray checks if this type is an Array

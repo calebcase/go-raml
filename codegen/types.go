@@ -72,8 +72,6 @@ func convertToGoType(source string) string {
 		return "[][]" + convertToGoType(source[:len(source)-4])
 	case strings.HasSuffix(source, "[]"): // array
 		return "[]" + convertToGoType(source[:len(source)-2])
-	case strings.HasSuffix(source, "{}"): // map
-		return "map[string]" + convertToGoType(source[:len(source)-2])
 	case strings.Index(source, "|") > 0:
 		return convertUnion(source)
 	}

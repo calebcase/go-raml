@@ -194,8 +194,6 @@ func (sd *structDef) handleAdvancedType() {
 		sd.buildUnion()
 	case sd.T.IsArray(): // arary type
 		sd.buildArray()
-	case sd.T.IsMap(): //map
-		sd.buildMap()
 	case strings.ToLower(strType) == "object": // plain type
 		return
 	case sd.T.IsEnum(): // enum
@@ -248,26 +246,6 @@ func (sd *structDef) buildEnum() {
 	}
 
 	sd.buildOneLine(convertToGoType(sd.T.Type.(string)))
-}
-
-// build map type based on http://docs.raml.org/specs/1.0/#raml-10-spec-map-types
-// result is `type TypeName map[string]something`
-func (sd *structDef) buildMap() {
-	typeFromSquareBracketProp := func() string {
-		var p raml.Property
-		for k, v := range sd.T.Properties {
-			p = raml.ToProperty(k, v)
-			break
-		}
-
-		return convertToGoType(p.Type)
-	}
-	switch {
-	case sd.T.AdditionalProperties != "":
-		sd.buildOneLine(" map[string]" + convertToGoType(sd.T.AdditionalProperties))
-	case len(sd.T.Properties) == 1:
-		sd.buildOneLine(" map[string]" + typeFromSquareBracketProp())
-	}
 }
 
 // build array type

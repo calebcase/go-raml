@@ -132,37 +132,6 @@ func ParseReadFile(filePath string) ([]byte, *APIDefinition, error) {
 	return preprocessedContentsBytes, apiDefinition, nil
 }
 
-func (apiDef *APIDefinition) postProcess() {
-	// traits
-	for i, tMap := range apiDef.Traits {
-		for name := range tMap {
-			t := tMap[name]
-			t.postProcess(name)
-			tMap[name] = t
-			traitsMap[name] = t // add to global traits map
-		}
-		apiDef.Traits[i] = tMap
-	}
-
-	// resource types
-	for i, rtMap := range apiDef.ResourceTypes {
-		for name := range rtMap {
-			rt := rtMap[name]
-			rt.postProcess(name)
-			rtMap[name] = rt
-		}
-		apiDef.ResourceTypes[i] = rtMap
-	}
-
-	// resources
-	for k := range apiDef.Resources {
-		r := apiDef.Resources[k]
-		r.postProcess(k, nil, apiDef.ResourceTypes)
-		apiDef.Resources[k] = r
-	}
-
-}
-
 // Reads the contents of a file, returns a bytes buffer
 func readFileContents(workingDirectory string, fileName string) ([]byte, error) {
 

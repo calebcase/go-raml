@@ -5,8 +5,8 @@ import (
 )
 
 type petshop struct {
-	Cats mapOfCats `json:"cats" validate:"nonzero"`
-	Name string    `json:"name" validate:"nonzero"`
+	Cats []Cat  `json:"cats" validate:"nonzero"`
+	Name string `json:"name" validate:"nonzero"`
 }
 
 func (s petshop) Validate() error {

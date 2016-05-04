@@ -22,7 +22,7 @@ type clientDef struct {
 func newClientDef(apiDef *raml.APIDefinition) clientDef {
 	cd := clientDef{
 		Name:    normalizeURI(apiDef.Title),
-		BaseURI: apiDef.BaseUri,
+		BaseURI: apiDef.BaseURI,
 	}
 	if strings.Index(cd.BaseURI, "{version}") > 0 {
 		cd.BaseURI = strings.Replace(cd.BaseURI, "{version}", apiDef.Version, -1)

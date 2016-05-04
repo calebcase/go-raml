@@ -57,9 +57,6 @@ types:
     uniqueItems: true
   BidimensionalArrayOfCats:
     type: Cat[][]
-  mapOfCats:
-    type: object
-    additionalProperties: Cat
   EnumString:
     type: string
     enum: [ str_a, str_b ]
@@ -76,21 +73,7 @@ types:
       name:
         type: string
       cats:
-        type: mapOfCats
-  mapOfString:
-    type: object
-    properties:
-      "[]":
-        type: string
-  mapOfCat:
-    type: object
-    properties:
-      "[]":
-        type: Cat
-  mapOfNumber:
-    properties:
-      "[]":
-        type: number
+        type: Cat[]
   ValidationString:
     properties:
       name:
