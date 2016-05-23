@@ -16,6 +16,7 @@ var (
 		"time-only":     "TimeOnly",
 		"datetime-only": "DatetimeOnly",
 		"datetime":      "DateTime",
+		"object":        "interface{}",
 	}
 )
 
