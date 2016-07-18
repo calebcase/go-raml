@@ -91,10 +91,12 @@ func main() {
 					Destination: &serverCommand.ImportPath,
 				},
 			},
-			Action: func(c *cli.Context) {
-				if err := serverCommand.Execute(); err != nil {
+			Action: func(c *cli.Context) error {
+				err := serverCommand.Execute()
+				if err != nil {
 					log.Error(err)
 				}
+				return err
 			},
 		},
 		{
@@ -133,23 +135,27 @@ func main() {
 					Destination: &clientCommand.ImportPath,
 				},
 			},
-			Action: func(c *cli.Context) {
-				if err := clientCommand.Execute(); err != nil {
+			Action: func(c *cli.Context) error {
+				err := clientCommand.Execute()
+				if err != nil {
 					log.Error(err)
 				}
+				return err
 			},
 		}, {
 			Name:  "spec",
 			Usage: "Generate a RAML specification from a go server",
-			Action: func(c *cli.Context) {
+			Action: func(c *cli.Context) error {
 				err := errors.New("Not implemented, check the roadmap")
 				log.Error(err)
+				return err
 			},
 		},
 	}
 
-	app.Action = func(c *cli.Context) {
+	app.Action = func(c *cli.Context) error {
 		cli.ShowAppHelp(c)
+		return nil
 	}
 
 	app.Run(os.Args)
